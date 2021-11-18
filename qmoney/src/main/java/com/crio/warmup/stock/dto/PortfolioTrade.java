@@ -56,6 +56,13 @@ public class PortfolioTrade {
   public TradeType getTradeType() {
     return tradeType;
   }
-  //solution
+
+  @Override
+  public String toString() {
+    return "PortfolioTrade [purchaseDate=" + purchaseDate + ", quantity=" + quantity + ", symbol=" + symbol
+        + ", tradeType=" + tradeType + "]";
+  }
+  
+  
 
 }
