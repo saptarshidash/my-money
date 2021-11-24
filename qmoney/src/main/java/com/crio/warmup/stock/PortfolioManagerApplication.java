@@ -180,10 +180,11 @@ public class PortfolioManagerApplication {
 
         List<AnnualizedReturn> returns = new ArrayList<>();
         LocalDate endDate = LocalDate.parse(args[1]);
-        
+
+        File tradeFile = resolveFileFromResources(args[0]);
 
         ObjectMapper mapper = getObjectMapper();
-        PortfolioTrade[] trades = mapper.readValue(Paths.get("/home/crio-user/workspace/saptarshii-das-ME_QMONEY_V2/qmoney/src/test/resources/assessments/"+args[0]).toFile(), PortfolioTrade[].class);
+        PortfolioTrade[] trades = mapper.readValue(tradeFile, PortfolioTrade[].class);
 
         for(PortfolioTrade trade: trades){
           List<Candle> candles = fetchCandles(trade, endDate, token);
