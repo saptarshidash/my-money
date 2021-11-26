@@ -13,7 +13,7 @@ class ModuleThreeTest {
   @Test
   void mainCalculateReturns() throws Exception {
     //given
-    String filename = "trades.json";
+    String filename = "assessments/trades.json";
 
     //when
     List<AnnualizedReturn> result = PortfolioManagerApplication
@@ -31,7 +31,7 @@ class ModuleThreeTest {
   @Test
   void mainCalculateReturnsEdgeCase() throws Exception {
     //given
-    String filename = "empty.json";
+    String filename = "assessments/empty.json";
 
     //when
     List<AnnualizedReturn> result = PortfolioManagerApplication
@@ -43,7 +43,7 @@ class ModuleThreeTest {
   @Test
   void mainCalculateReturnsVaryingDateRanges() throws Exception {
     //given
-    String filename = "trades_invalid_dates.json";
+    String filename = "assessments/trades_invalid_dates.json";
     //when
     List<AnnualizedReturn> result = PortfolioManagerApplication
         .mainCalculateSingleReturn(new String[]{filename, "2019-12-12"});
@@ -62,7 +62,7 @@ class ModuleThreeTest {
   @Test
   void mainCalculateReturnsInvalidStocks() throws Exception {
     //given
-    String filename = "trades_invalid_stock.json";
+    String filename = "assessments/trades_invalid_stock.json";
     //when
     Assertions.assertThrows(RuntimeException.class, () -> PortfolioManagerApplication
         .mainCalculateSingleReturn(new String[]{filename, "2019-12-12"}));
@@ -72,7 +72,7 @@ class ModuleThreeTest {
   @Test
   void mainCalculateReturnsOldTrades() throws Exception {
     //given
-    String filename = "trades_old.json";
+    String filename = "assessments/trades_old.json";
 
     //when
     List<AnnualizedReturn> result = PortfolioManagerApplication
