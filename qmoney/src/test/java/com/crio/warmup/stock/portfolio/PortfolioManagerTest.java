@@ -32,8 +32,8 @@ This class is supposed to be used by assessments only.
 class PortfolioManagerTest {
 
 
-//   @Mock
-//   private RestTemplate restTemplate;
+  @Mock
+  private RestTemplate restTemplate;
 
   @Spy
   @InjectMocks
