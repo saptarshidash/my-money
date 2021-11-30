@@ -10,21 +10,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-
-import com.crio.warmup.stock.dto.*;
-import com.crio.warmup.stock.log.UncaughtExceptionHandler;
-import com.crio.warmup.stock.portfolio.PortfolioManager;
-import com.crio.warmup.stock.portfolio.PortfolioManagerFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -375,7 +360,7 @@ public class PortfolioManagerApplication {
        // create instance of PortfolioManagar using factory method
        // create instance of rest template and pass it to the factory method
        RestTemplate restTemplate = new RestTemplate();
-       PortfolioManager portfolioManager = PortfolioManagerFactory.getPortfolioManager(restTemplate);
+       PortfolioManager portfolioManager = PortfolioManagerFactory.getPortfolioManager("",restTemplate);
        return portfolioManager.calculateAnnualizedReturn(Arrays.asList(portfolioTrades), endDate);
       
   }
