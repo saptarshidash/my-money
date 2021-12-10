@@ -6,6 +6,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import com.crio.warmup.stock.dto.AnnualizedReturn;
@@ -65,29 +70,29 @@ public class PortfolioManagerImpl implements PortfolioManager {
   // Remember to fill out the buildUri function and use that.
 
   public List<Candle> getStockQuote(String symbol, LocalDate from, LocalDate to)
-      throws JsonProcessingException, StockQuoteServiceException {
+      throws StockQuoteServiceException{
 
     List<Candle> candles = stockQuotesService.getStockQuote(symbol, from, to);
     System.out.println();
     return candles;
-     
+
   }
 
   protected String buildUri(String symbol, LocalDate startDate, LocalDate endDate) {
-       String uriTemplate = "https://api.tiingo.com/tiingo/daily/"+symbol+"/prices?"
-            + "startDate="+startDate+"&endDate="+endDate+"&token="+API_KEY;
+    String uriTemplate = "https://api.tiingo.com/tiingo/daily/" + symbol + "/prices?" + "startDate=" + startDate
+        + "&endDate=" + endDate + "&token=" + API_KEY;
 
-        return uriTemplate;
+    return uriTemplate;
   }
 
   @Override
   public List<AnnualizedReturn> calculateAnnualizedReturn(List<PortfolioTrade> portfolioTrades, LocalDate endDate)
-  throws StockQuoteServiceException, JsonProcessingException {
+      throws StockQuoteServiceException {
 
     List<Candle> candles = new ArrayList<>();
     List<AnnualizedReturn> annualizedReturns = new ArrayList<>();
 
-    for(PortfolioTrade trade: portfolioTrades){
+    for (PortfolioTrade trade : portfolioTrades) {
       candles = getStockQuote(trade.getSymbol(), trade.getPurchaseDate(), endDate);
       double buyPrice = candles.get(0).getOpen();
       double sellPrice = candles.get(candles.size() - 1).getClose();
@@ -97,34 +102,55 @@ public class PortfolioManagerImpl implements PortfolioManager {
     annualizedReturns.sort(getComparator());
     return annualizedReturns;
 
-    // return portfolioTrades.stream().map(trade ->{
-
-    //   List<Candle> candles = null;
-    //   try {
-    //     candles = getStockQuote(trade.getSymbol(), trade.getPurchaseDate(), endDate);
-    //   } catch (JsonProcessingException e) {
-    //     e.printStackTrace();
-    //     throw new StockQuoteServiceException(e.getMessage());
-        
-    //   }
-
-    //   Double buyPrice = candles.get(0).getOpen();
-    //   Double sellPrice = candles.get(candles.size() - 1).getClose();
-
-    //   return calculateSingleAnnualizedReturn(trade, endDate, buyPrice, sellPrice);
-    // }).sorted(getComparator())
-    //   .collect(Collectors.toList());
   }
 
-  private AnnualizedReturn calculateSingleAnnualizedReturn(PortfolioTrade trade, 
-      LocalDate endDate, Double buyPrice, Double sellPrice){
+  private AnnualizedReturn calculateSingleAnnualizedReturn(PortfolioTrade trade, LocalDate endDate, Double buyPrice,
+      Double sellPrice) {
 
-           Double totalReturn = (sellPrice - buyPrice) / buyPrice;
-           //double years = trade.getPurchaseDate().until(endDate, ChronoUnit.DAYS) / 365d;
-           double totalYears =  (ChronoUnit.DAYS.between(trade.getPurchaseDate(), endDate) / (double)365);
+    Double totalReturn = (sellPrice - buyPrice) / buyPrice;
+    // double years = trade.getPurchaseDate().until(endDate, ChronoUnit.DAYS) /
+    // 365d;
+    double totalYears = (ChronoUnit.DAYS.between(trade.getPurchaseDate(), endDate) / (double) 365);
 
-           Double annualizedReturn = Math.pow((1 + totalReturn), (1 / totalYears)) - 1;
-           return new AnnualizedReturn(trade.getSymbol(), annualizedReturn, totalReturn);
+    Double annualizedReturn = Math.pow((1 + totalReturn), (1 / totalYears)) - 1;
+    return new AnnualizedReturn(trade.getSymbol(), annualizedReturn, totalReturn);
+  }
+
+  @Override
+  public List<AnnualizedReturn> calculateAnnualizedReturnParallel(List<PortfolioTrade> portfolioTrades,
+      LocalDate endDate, int numThreads) throws StockQuoteServiceException {
+
+    // create a executor service
+    ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+
+    List<Future<AnnualizedReturn>> calls = new ArrayList<>();
+    for (PortfolioTrade trade : portfolioTrades) {
+      calls.add(executor.submit(new Callable<AnnualizedReturn>() {
+
+        @Override
+        public AnnualizedReturn call() throws Exception {
+          List<Candle> candles = getStockQuote(trade.getSymbol(), trade.getPurchaseDate(), endDate);
+          double buyPrice = candles.get(0).getOpen();
+          double sellPrice = candles.get(candles.size() - 1).getClose();
+          return calculateSingleAnnualizedReturn(trade, endDate, buyPrice, sellPrice);
+        }
+      }));
+    }
+    List<AnnualizedReturn> returns = new ArrayList<>();
+    for (Future<AnnualizedReturn> future : calls) {
+      try {
+        returns.add(future.get());
+      } catch (InterruptedException | ExecutionException e) {
+        e.printStackTrace();
+        throw new StockQuoteServiceException(e.getMessage());
+      }
+        }
+
+        executor.shutdown();
+
+        returns.sort(getComparator());
+
+    return returns;
   }
 
 

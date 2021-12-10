@@ -27,8 +27,7 @@ public class AlphavantageService implements StockQuotesService {
   }
 
   @Override
-  public List<Candle> getStockQuote(String symbol, LocalDate from, LocalDate to) throws JsonProcessingException,
-  StockQuoteServiceException {
+  public List<Candle> getStockQuote(String symbol, LocalDate from, LocalDate to) throws StockQuoteServiceException {
 
     String uri = buildUri(symbol);
 
@@ -37,7 +36,7 @@ public class AlphavantageService implements StockQuotesService {
     try{
 
       AlphavantageDailyResponse response = restTemplate.getForObject(uri, AlphavantageDailyResponse.class);
-      // filtering dates which falls in rande
+      // filtering dates which falls in range
       for(LocalDate date: response.getCandles().keySet()){
         if((date.isAfter(from) && date.isBefore(to)) || date.isEqual(from) || date.isEqual(to)){
           response.getCandles().get(date).setDate(date); // setting date for the candle

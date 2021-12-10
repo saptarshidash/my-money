@@ -12,11 +12,11 @@ import com.crio.warmup.stock.PortfolioUtil;
 import com.crio.warmup.stock.dto.Candle;
 import com.crio.warmup.stock.dto.TiingoCandle;
 import com.crio.warmup.stock.exception.StockQuoteServiceException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.client.RestTemplate;
 
 public class TiingoService implements StockQuotesService {
@@ -28,21 +28,27 @@ public class TiingoService implements StockQuotesService {
   }
 
   @Override
-  public List<Candle> getStockQuote(String symbol, LocalDate from, LocalDate to) throws JsonProcessingException,
-      StockQuoteServiceException {
+  public List<Candle> getStockQuote(String symbol, LocalDate from, LocalDate to) throws  StockQuoteServiceException {
     String url = buildUri(symbol, from, to);
     String data;
+    List<Candle> candles = new ArrayList<>();
 
     try{
       data = restTemplate.getForObject(url, String.class);
+      ObjectMapper mapper = PortfolioUtil.getObjectMapper();
+      candles = mapper.readValue(data, new TypeReference<List<TiingoCandle>>() {
+      }).stream().collect(Collectors.toList());
+
+      System.out.println("Candle size - "+candles.size());
     } catch(Exception e){
+      e.printStackTrace();
       throw new StockQuoteServiceException(e.getMessage());
     }
 
-    ObjectMapper mapper = PortfolioUtil.getObjectMapper();
 
-    return mapper.readValue(data, new TypeReference<List<TiingoCandle>>() {
-    }).stream().collect(Collectors.toList());
+    return candles;
+
+    
 
   }
 
