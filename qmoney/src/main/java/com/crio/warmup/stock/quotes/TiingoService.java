@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import com.crio.warmup.stock.PortfolioUtil;
 import com.crio.warmup.stock.dto.Candle;
 import com.crio.warmup.stock.dto.TiingoCandle;
+import com.crio.warmup.stock.exception.StockQuoteServiceException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,10 +28,16 @@ public class TiingoService implements StockQuotesService {
   }
 
   @Override
-  public List<Candle> getStockQuote(String symbol, LocalDate from, LocalDate to) throws JsonProcessingException {
+  public List<Candle> getStockQuote(String symbol, LocalDate from, LocalDate to) throws JsonProcessingException,
+      StockQuoteServiceException {
     String url = buildUri(symbol, from, to);
+    String data;
 
-    String data = restTemplate.getForObject(url, String.class);
+    try{
+      data = restTemplate.getForObject(url, String.class);
+    } catch(Exception e){
+      throw new StockQuoteServiceException(e.getMessage());
+    }
 
     ObjectMapper mapper = PortfolioUtil.getObjectMapper();
 
@@ -59,6 +66,22 @@ public class TiingoService implements StockQuotesService {
 
      return uriTemplate;
 }
+
+
+
+
+
+
+  // TODO: CRIO_TASK_MODULE_EXCEPTIONS
+  //  1. Update the method signature to match the signature change in the interface.
+  //     Start throwing new StockQuoteServiceException when you get some invalid response from
+  //     Tiingo, or if Tiingo returns empty results for whatever reason, or you encounter
+  //     a runtime exception during Json parsing.
+  //  2. Make sure that the exception propagates all the way from
+  //     PortfolioManager#calculateAnnualisedReturns so that the external user's of our API
+  //     are able to explicitly handle this exception upfront.
+
+  //CHECKSTYLE:OFF
 
 
 }

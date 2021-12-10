@@ -12,6 +12,7 @@ import com.crio.warmup.stock.dto.AlphavantageCandle;
 import com.crio.warmup.stock.dto.AlphavantageDailyResponse;
 import com.crio.warmup.stock.dto.Candle;
 import com.crio.warmup.stock.dto.PortfolioTrade;
+import com.crio.warmup.stock.exception.StockQuoteServiceException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.springframework.web.client.RestTemplate;
@@ -26,20 +27,26 @@ public class AlphavantageService implements StockQuotesService {
   }
 
   @Override
-  public List<Candle> getStockQuote(String symbol, LocalDate from, LocalDate to) throws JsonProcessingException {
+  public List<Candle> getStockQuote(String symbol, LocalDate from, LocalDate to) throws JsonProcessingException,
+  StockQuoteServiceException {
 
     String uri = buildUri(symbol);
 
     List<Candle> candles = new ArrayList<>();
-    
-    AlphavantageDailyResponse response = restTemplate.getForObject(uri, AlphavantageDailyResponse.class);
 
-    // filtering dates which falls in rande
-    for(LocalDate date: response.getCandles().keySet()){
-      if((date.isAfter(from) && date.isBefore(to)) || date.isEqual(from) || date.isEqual(to)){
-        response.getCandles().get(date).setDate(date); // setting date for the candle
-        candles.add(response.getCandles().get(date));
+    try{
+
+      AlphavantageDailyResponse response = restTemplate.getForObject(uri, AlphavantageDailyResponse.class);
+      // filtering dates which falls in rande
+      for(LocalDate date: response.getCandles().keySet()){
+        if((date.isAfter(from) && date.isBefore(to)) || date.isEqual(from) || date.isEqual(to)){
+          response.getCandles().get(date).setDate(date); // setting date for the candle
+          candles.add(response.getCandles().get(date));
+        }
       }
+
+    } catch(Exception e){
+      throw new StockQuoteServiceException(e.getMessage());
     }
 
     Collections.reverse(candles);
@@ -82,6 +89,13 @@ public class AlphavantageService implements StockQuotesService {
     +"function=TIME_SERIES_DAILY_ADJUSTED&symbol="+symbol+"&outputsize=full&apikey="+ALPHAV_KEY;
 
   }
+  // TODO: CRIO_TASK_MODULE_EXCEPTIONS
+  //   1. Update the method signature to match the signature change in the interface.
+  //   2. Start throwing new StockQuoteServiceException when you get some invalid response from
+  //      Alphavantage, or you encounter a runtime exception during Json parsing.
+  //   3. Make sure that the exception propagates all the way from PortfolioManager, so that the
+  //      external user's of our API are able to explicitly handle this exception upfront.
+  //CHECKSTYLE:OFF
 
 }
 

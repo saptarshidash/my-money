@@ -10,11 +10,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
 
 import com.crio.warmup.stock.dto.Candle;
-import com.crio.warmup.stock.dto.TiingoCandle;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.net.URI;
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -36,12 +34,9 @@ class TiingoServiceTest {
   @Mock
   private RestTemplate restTemplate;
 
-  
-  @InjectMocks
-  private TiingoService tiingoService;
   @Spy
   @InjectMocks
-  private Arrays arrays;
+  private TiingoService tiingoService;
 
   private String sampleTiingoResponse = "[{\"date\":\"2019-01-02T00:00:00.000Z\",\"close\":1054.68,"
       + "\"high\":1060.79,\"low\":1025.28,\"open\":1027.2,\"volume\":1593395,\"adjClose\":1054.68,"
@@ -62,13 +57,9 @@ class TiingoServiceTest {
     Mockito.doReturn(sampleTiingoResponse)
         .when(restTemplate).getForObject(anyString(), eq(String.class));
 
-        
-
     List<Candle> candles = tiingoService
         .getStockQuote("GOOGL",
             LocalDate.parse("2019-01-01"), LocalDate.parse("2019-01-04"));
-
-            System.out.println(candles);
 
     assertEquals(candles.get(0).getOpen(), 1027.2, 0.3);
 

@@ -24,14 +24,12 @@ public enum StockQuoteServiceFactory {
 
   public StockQuotesService getService(String provider,  RestTemplate restTemplate) {
 
-    provider = provider.toLowerCase();
-    switch(provider){
-      
-      case "tiingo":{
-        return new TiingoService(restTemplate);
-      }
+    if(provider != null){
+      provider = provider.toLowerCase();
     }
 
-     return new AlphavantageService(restTemplate);
+    if("tiingo".equals(provider)) return new TiingoService(restTemplate);
+
+    return new AlphavantageService(restTemplate);
   }
 }

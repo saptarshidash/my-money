@@ -3,7 +3,7 @@ package com.crio.warmup.stock.portfolio;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import com.crio.warmup.stock.dto.AnnualizedReturn;
 import com.crio.warmup.stock.dto.Candle;
 import com.crio.warmup.stock.dto.PortfolioTrade;
-import com.crio.warmup.stock.dto.TiingoCandle;
+import com.crio.warmup.stock.exception.StockQuoteServiceException;
 import com.crio.warmup.stock.quotes.StockQuotesService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -64,7 +64,8 @@ public class PortfolioManagerImpl implements PortfolioManager {
   // Extract the logic to call Tiingo third-party APIs to a separate function.
   // Remember to fill out the buildUri function and use that.
 
-  public List<Candle> getStockQuote(String symbol, LocalDate from, LocalDate to) throws JsonProcessingException {
+  public List<Candle> getStockQuote(String symbol, LocalDate from, LocalDate to)
+      throws JsonProcessingException, StockQuoteServiceException {
 
     List<Candle> candles = stockQuotesService.getStockQuote(symbol, from, to);
     System.out.println();
@@ -80,25 +81,39 @@ public class PortfolioManagerImpl implements PortfolioManager {
   }
 
   @Override
-  public List<AnnualizedReturn> calculateAnnualizedReturn(List<PortfolioTrade> portfolioTrades, LocalDate endDate) {
-    // TODO Auto-generated method stub
+  public List<AnnualizedReturn> calculateAnnualizedReturn(List<PortfolioTrade> portfolioTrades, LocalDate endDate)
+  throws StockQuoteServiceException, JsonProcessingException {
 
-    return portfolioTrades.stream().map(trade ->{
+    List<Candle> candles = new ArrayList<>();
+    List<AnnualizedReturn> annualizedReturns = new ArrayList<>();
 
-      List<Candle> candles = null;
-      try {
-        candles = getStockQuote(trade.getSymbol(), trade.getPurchaseDate(), endDate);
-      } catch (JsonProcessingException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      }
+    for(PortfolioTrade trade: portfolioTrades){
+      candles = getStockQuote(trade.getSymbol(), trade.getPurchaseDate(), endDate);
+      double buyPrice = candles.get(0).getOpen();
+      double sellPrice = candles.get(candles.size() - 1).getClose();
+      annualizedReturns.add(calculateSingleAnnualizedReturn(trade, endDate, buyPrice, sellPrice));
+    }
 
-      Double buyPrice = candles.get(0).getOpen();
-      Double sellPrice = candles.get(candles.size() - 1).getClose();
+    annualizedReturns.sort(getComparator());
+    return annualizedReturns;
 
-      return calculateSingleAnnualizedReturn(trade, endDate, buyPrice, sellPrice);
-    }).sorted(getComparator())
-      .collect(Collectors.toList());
+    // return portfolioTrades.stream().map(trade ->{
+
+    //   List<Candle> candles = null;
+    //   try {
+    //     candles = getStockQuote(trade.getSymbol(), trade.getPurchaseDate(), endDate);
+    //   } catch (JsonProcessingException e) {
+    //     e.printStackTrace();
+    //     throw new StockQuoteServiceException(e.getMessage());
+        
+    //   }
+
+    //   Double buyPrice = candles.get(0).getOpen();
+    //   Double sellPrice = candles.get(candles.size() - 1).getClose();
+
+    //   return calculateSingleAnnualizedReturn(trade, endDate, buyPrice, sellPrice);
+    // }).sorted(getComparator())
+    //   .collect(Collectors.toList());
   }
 
   private AnnualizedReturn calculateSingleAnnualizedReturn(PortfolioTrade trade, 
