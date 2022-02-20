@@ -5,9 +5,6 @@ import java.time.LocalDate;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-// TODO: CRIO_TASK_MODULE_ADDITIONAL_REFACTOR
-//  Implement the Candle interface in such a way that it matches the parameters returned
-//  inside Json response from Alphavantage service.
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AlphavantageCandle implements Candle {
@@ -23,31 +20,26 @@ public class AlphavantageCandle implements Candle {
 
   @Override
   public Double getOpen() {
-    // TODO Auto-generated method stub
     return open;
   }
 
   @Override
   public Double getClose() {
-    // TODO Auto-generated method stub
     return close;
   }
 
   @Override
   public Double getHigh() {
-    // TODO Auto-generated method stub
     return high;
   }
 
   @Override
   public Double getLow() {
-    // TODO Auto-generated method stub
     return low;
   }
 
   @Override
   public LocalDate getDate() {
-    // TODO Auto-generated method stub
     return date;
   }
 

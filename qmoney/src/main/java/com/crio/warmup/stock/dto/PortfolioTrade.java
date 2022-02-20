@@ -40,7 +40,6 @@ public class PortfolioTrade {
     this.purchaseDate = purchaseDate;
   }
 
-  //solution
   public String getSymbol() {
     return symbol;
   }

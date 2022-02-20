@@ -37,38 +37,23 @@ public class PortfolioManagerImpl implements PortfolioManager {
     this.restTemplate = restTemplate;
   }
 
-  // TODO: CRIO_TASK_MODULE_REFACTOR
-  // 1. Now we want to convert our code into a module, so we will not call it from
-  // main anymore.
-  // Copy your code from Module#3
-  // PortfolioManagerApplication#calculateAnnualizedReturn
-  // into #calculateAnnualizedReturn function here and ensure it follows the
-  // method signature.
-  // 2. Logic to read Json file and convert them into Objects will not be required
-  // further as our
-  // clients will take care of it, going forward.
-
-  // Note:
-  // Make sure to exercise the tests inside PortfolioManagerTest using command
-  // below:
-  // ./gradlew test --tests PortfolioManagerTest
-
-  // CHECKSTYLE:OFF
-
   public PortfolioManagerImpl(StockQuotesService stockQuotesService) {
     this.stockQuotesService = stockQuotesService;
   }
 
+  // Returns a comperator to sort the annualized returns list
   private Comparator<AnnualizedReturn> getComparator() {
     return Comparator.comparing(AnnualizedReturn::getAnnualizedReturn).reversed();
   }
 
-  // CHECKSTYLE:OFF
-
-  // TODO: CRIO_TASK_MODULE_REFACTOR
-  // Extract the logic to call Tiingo third-party APIs to a separate function.
-  // Remember to fill out the buildUri function and use that.
-
+  /**
+   * Gets the candle data for a particular stock.
+   * @param symbol Stock symbol for which candle will be fetched.
+   * @param from Date from which candle data will be fecthed
+   * @param to Date upto which candle data will be fetched
+   * @return Returns a list of candle data in between specified date range.
+   * @throws StockQuoteServiceException Throws exception in case some error in stock service.
+   */
   public List<Candle> getStockQuote(String symbol, LocalDate from, LocalDate to)
       throws StockQuoteServiceException{
 
@@ -78,6 +63,7 @@ public class PortfolioManagerImpl implements PortfolioManager {
 
   }
 
+  // Used to build the api endpoint
   protected String buildUri(String symbol, LocalDate startDate, LocalDate endDate) {
     String uriTemplate = "https://api.tiingo.com/tiingo/daily/" + symbol + "/prices?" + "startDate=" + startDate
         + "&endDate=" + endDate + "&token=" + API_KEY;
@@ -104,12 +90,12 @@ public class PortfolioManagerImpl implements PortfolioManager {
 
   }
 
+  // Utility method to calculate annualized return for a single portfolio trade object
   private AnnualizedReturn calculateSingleAnnualizedReturn(PortfolioTrade trade, LocalDate endDate, Double buyPrice,
       Double sellPrice) {
 
     Double totalReturn = (sellPrice - buyPrice) / buyPrice;
-    // double years = trade.getPurchaseDate().until(endDate, ChronoUnit.DAYS) /
-    // 365d;
+   
     double totalYears = (ChronoUnit.DAYS.between(trade.getPurchaseDate(), endDate) / (double) 365);
 
     Double annualizedReturn = Math.pow((1 + totalReturn), (1 / totalYears)) - 1;
@@ -153,11 +139,5 @@ public class PortfolioManagerImpl implements PortfolioManager {
     return returns;
   }
 
-
-  // ¶TODO: CRIO_TASK_MODULE_ADDITIONAL_REFACTOR
-  //  Modify the function #getStockQuote and start delegating to calls to
-  //  stockQuoteService provided via newly added constructor of the class.
-  //  You also have a liberty to completely get rid of that function itself, however, make sure
-  //  that you do not delete the #getStockQuote function.
 
 }
